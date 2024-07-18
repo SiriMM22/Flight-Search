@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flight Search</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            background-color: #1e1e1e;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+            margin-top: 30px;
+        }
+        h1 {
+            text-align: center;
+            color: #bb86fc;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #e0e0e0;
+        }
+        select, button {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: none;
+            margin-top: 5px;
+        }
+        select {
+            background-color: #333;
+            color: #e0e0e0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        button {
+            background-color: #bb86fc;
+            color: #121212;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #9b63d4;
+        }
+        .results {
+            margin-top: 20px;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            background-color: #2c2c2c;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+        }
+        .card h3 {
+            margin-top: 0;
+            color: #bb86fc;
+        }
+        .card p {
+            margin: 5px 0;
+        }
+        .highlight {
+            color: #ffcc00;
+            font-weight: bold;
+        }
+        .error-message {
+            text-align: center;
+            color: #ff6f6f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Flight Search</h1>
+        <div class="form-group">
+            <h3>Choose Origin & destination Airports:</h3>
+            <label for="origin">Origin:</label>
+            <select id="origin">
+                <option value="JFK">JFK</option>
+                <option value="DEL">DEL</option>
+                <option value="SYD">SYD</option>
+                <option value="BOM">BOM</option>
+                <option value="BNE">BNE</option>
+                <option value="BLR">BLR</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="destination">Destination:</label>
+            <select id="destination">
+                <option value="JFK">JFK</option>
+                <option value="DEL">DEL</option>
+                <option value="SYD">SYD</option>
+                <option value="LHR">LHR</option>
+                <option value="CDG">CDG</option>
+                <option value="DOH">DOH</option>
+                <option value="SIN">SIN</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="cabin">Cabin:</label>
+            <select id="cabin">
+                <option value="Economy">Economy</option>
+                <option value="Business">Business</option>
+                <option value="First">First</option>
+            </select>
+        </div>
+        <button onclick="searchFlights()">Search</button>
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        function searchFlights() {
+            const origin = document.getElementById('origin').value;
+            const destination = document.getElementById('destination').value;
+            const cabin = document.getElementById('cabin').value;
+
+            const data = {
+                origin: origin,
+                destination: destination,
+                partnerPrograms: [
+                    'Air Canada', 'United Airlines', 'KLM', 'Qantas', 'American Airlines',
+                    'Etihad Airways', 'Alaska Airlines', 'Qatar Airways', 'LifeMiles'
+                ],
+                stops: 2,
+                departureTimeFrom: '2024-07-09T00:00:00Z',
+                departureTimeTo: '2024-10-07T00:00:00Z',
+                isOldData: false,
+                limit: 302,
+                offset: 0,
+                cabinSelection: [cabin],
+                date: '2024-07-09T12:00:17.796Z'
+            };
+
+            fetch('/search', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const results = document.getElementById('results');
+                results.innerHTML = '';
+
+                if (data.data && data.data.length > 0) {
+                    const resultsGrid = document.createElement('div');
+                    resultsGrid.classList.add('results-grid');
+
+                    data.data.forEach(item => {
+                        const card = document.createElement('div');
+                        card.classList.add('card');
+
+                        card.innerHTML = `
+                            <h3>${item.partner_program}</h3>
+                            <p><span class="highlight">From:</span> ${origin}</p>
+                            <p><span class="highlight">To:</span> ${destination}</p>
+                            <p><span class="highlight">Dates:</span> 2024-07-09 - 2024-10-07</p>
+                            <p><span class="highlight">Business Miles:</span> ${item.min_business_miles || 'N/A'}</p>
+                            <p><span class="highlight">Business Tax:</span> ${item.min_business_tax ? `$${item.min_business_tax}` : 'N/A'}</p>
+                            <p><span class="highlight">Economy Miles:</span> ${item.min_economy_miles ? `${item.min_economy_miles} + $${item.min_economy_tax}` : 'N/A'}</p>
+                            <p><span class="highlight">First Miles:</span> ${item.min_first_miles || 'N/A'}</p>
+                        `;
+                        resultsGrid.appendChild(card);
+                    });
+
+                    results.appendChild(resultsGrid);
+                } else {
+                    results.innerHTML = '<p class="error-message">Try another search route.</p>';
+                }
+            })
+            .catch(error => {
+                const results = document.getElementById('results');
+                results.innerHTML = '<p class="error-message">An error occurred. Please try again.</p>';
+            });
+        }
+    </script>
+</body>
+</html>
